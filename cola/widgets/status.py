@@ -878,6 +878,27 @@ class StatusTreeWidget(QtWidgets.QTreeWidget):
         """Called when an item is double-clicked in the repo status tree."""
         cmds.do(cmds.StageOrUnstage)
 
+    def mousePressEvent(self, event):
+        """Handle clicks on icon"""
+        item = self.itemAt(event.pos())
+        item_text = item.text(0)
+        # No doubt there's a better way to do the following
+        is_dir = item_text.endswith("/") or item_text.endswith("\\")
+        item_rect = self.visualItemRect(item)
+        rect = QtCore.QRect()
+        rect.setTopLeft(item_rect.topLeft())
+        # Assume icon area is the entire height and width==height
+        rect.setHeight(item_rect.height())
+        rect.setWidth(rect.height())
+        if rect.contains(event.pos()) and not is_dir:
+            # Clicked icon -- stage/unstage like a double click
+            # (Don't do directories since they're hard to undo by hand!)
+            self.setCurrentItem(item)
+            cmds.do(cmds.StageOrUnstage)
+        else:
+            # Just pass it through
+            return super().mousePressEvent(event)
+
     def show_selection(self):
         """Show the selected item."""
         # Sync the selection model
